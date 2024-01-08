@@ -19,3 +19,8 @@
 
 # Go workspace file
 go.work
+
+# AWSの設定に使用したファイル
+AWS_config
+
+weather-record-app/.aws-sam
