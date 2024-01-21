@@ -1,5 +1,3 @@
-// 取得できるやつ
-
 package main
 
 import (
@@ -10,6 +8,8 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+
+	apis "hello-world/apis"
 )
 
 type ResponseJson struct {
@@ -31,7 +31,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		greeting = fmt.Sprintf("Hello, %s!\n", sourceIP)
 	}
 
-	// handler関数内でrequest関数を呼び出す
+	// 天気予報APIから天気の情報を取得する
 	response, err := getWeatherInfo(request)
 	if err != nil {
 		return events.APIGatewayProxyResponse{
@@ -43,6 +43,16 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	// レスポンス表示
 	fmt.Println("レスポンス:")
 	fmt.Println(response)
+
+	// 天気予報APIから天気の情報を取得する
+	apis.PutDataDB()
+	// response, err := operation.PutDataDB()
+	// if err != nil {
+	// 	return events.APIGatewayProxyResponse{
+	// 		Body:       greeting,
+	// 		StatusCode: 500,
+	// 	}, err
+	// }
 
 	return events.APIGatewayProxyResponse{
 		Body:       greeting,
