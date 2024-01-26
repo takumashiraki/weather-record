@@ -45,7 +45,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	fmt.Println(response)
 
 	// 天気予報APIから天気の情報を取得する
-	apis.PutDataDB()
+	apis.PutDataDB(response)
 	// response, err := operation.PutDataDB()
 	// if err != nil {
 	// 	return events.APIGatewayProxyResponse{
