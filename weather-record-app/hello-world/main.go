@@ -12,8 +12,79 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
+// --- API Responseを受け取るための構造体 ---
+// Forecast は天気予報の情報を表す構造体
+type Forecast struct {
+	Date           string `json:"date"`
+	DateLabel      string `json:"dateLabel"`
+	Telop          string `json:"telop"`
+	Weather        string `json:"weather"`
+	Wind           string `json:"wind"`
+	Wave           string `json:"wave"`
+	MinTemperature *struct {
+		Celsius    *float64 `json:"celsius"`
+		Fahrenheit *float64 `json:"fahrenheit"`
+	} `json:"temperature"`
+	MaxTemperature *struct {
+		Celsius    *float64 `json:"celsius"`
+		Fahrenheit *float64 `json:"fahrenheit"`
+	} `json:"temperature"`
+	ChanceOfRain struct {
+		T00_06 string `json:"T00_06"`
+		T06_12 string `json:"T06_12"`
+		T12_18 string `json:"T12_18"`
+		T18_24 string `json:"T18_24"`
+	} `json:"chanceOfRain"`
+	Image struct {
+		Title  string `json:"title"`
+		URL    string `json:"url"`
+		Width  int    `json:"width"`
+		Height int    `json:"height"`
+	} `json:"image"`
+}
+
+// Location は地域情報を表す構造体
+type Location struct {
+	Area       string `json:"area"`
+	Prefecture string `json:"prefecture"`
+	District   string `json:"district"`
+	City       string `json:"city"`
+}
+
+// Copyright は著作権情報を表す構造体
+type Copyright struct {
+	Title string `json:"title"`
+	Link  string `json:"link"`
+	Image struct {
+		Title  string `json:"title"`
+		Link   string `json:"link"`
+		URL    string `json:"url"`
+		Width  int    `json:"width"`
+		Height int    `json:"height"`
+	} `json:"image"`
+	Provider []struct {
+		Link string `json:"link"`
+		Name string `json:"name"`
+		Note string `json:"note"`
+	} `json:"provider"`
+}
+
+// ResponseJson はAPIからのレスポンスを表す構造体
 type ResponseJson struct {
-	Response map[string]interface{}
+	PublicTime          string `json:"publicTime"`
+	PublicTimeFormatted string `json:"publicTimeFormatted"`
+	PublishingOffice    string `json:"publishingOffice"`
+	Title               string `json:"title"`
+	Link                string `json:"link"`
+	Description         struct {
+		PublicTimeFormatted string `json:"publicTimeFormatted"`
+		HeadlineText        string `json:"headlineText"`
+		BodyText            string `json:"bodyText"`
+		Text                string `json:"text"`
+	} `json:"description"`
+	Forecasts []Forecast `json:"forecasts"`
+	Location  Location   `json:"location"`
+	Copyright Copyright  `json:"copyright"`
 }
 
 const (
@@ -50,6 +121,10 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	}, nil
 }
 
+func main() {
+	lambda.Start(handler)
+}
+
 func getWeatherInfo(request events.APIGatewayProxyRequest) (*ResponseJson, error) {
 	var r ResponseJson
 	// URLの組み立て
@@ -69,17 +144,12 @@ func getWeatherInfo(request events.APIGatewayProxyRequest) (*ResponseJson, error
 		return nil, err
 	}
 
-	var responseBody map[string]interface{}
 	// json.UnmarshalでJSONデータをGoのオブジェクトに変換する
-	err = json.Unmarshal(body, &responseBody)
+	err = json.Unmarshal(body, &r)
 	if err != nil {
 		fmt.Println("レスポンスボディJSONに変換エラー:", err)
 		return nil, err
 	}
-	r.Response = responseBody
-	return &r, nil
-}
 
-func main() {
-	lambda.Start(handler)
+	return &r, nil
 }
