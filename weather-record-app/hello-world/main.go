@@ -87,6 +87,46 @@ type ResponseJson struct {
 	Copyright Copyright  `json:"copyright"`
 }
 
+// --- DBにデータを格納するための構造体 ---
+type Reagion struct {
+	Id   string
+	Name string
+	Pref string
+}
+
+type Temperature struct {
+	Id   string
+	Date string  `json:"date"`
+	Min  float64 `json:"min"`
+	Max  float64 `json:"max"`
+}
+
+type Detail struct {
+	Id      string
+	Date    string `json:"date"`
+	Weather string `json:"weather"`
+	Wind    string `json:"wind"`
+	Wave    string `json:"wave"`
+	Telop   string `json:"telop"`
+}
+
+type ChanceOfRain struct {
+	Id     string
+	Date   string `json:"date"`
+	T00_06 string `json:"T00_06"`
+	T06_12 string `json:"T06_12"`
+	T12_18 string `json:"T12_18"`
+	T18_24 string `json:"T18_24"`
+}
+
+// ForecastData は API レスポンスから変換したデータを格納する構造体
+type ForecastData struct {
+	Reagion      Reagion
+	Temperatures []Temperature
+	Details      []Detail
+	Chances      []ChanceOfRain
+}
+
 const (
 	apiEndpoint = "https://weather.tsukumijima.net/api/forecast/city"
 	cityId      = "011000"
@@ -111,9 +151,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		}, err
 	}
 
-	// レスポンス表示
-	fmt.Println("レスポンス:")
-	fmt.Println(response)
+	putDataDB(response, request)
 
 	return events.APIGatewayProxyResponse{
 		Body:       greeting,
@@ -152,4 +190,65 @@ func getWeatherInfo(request events.APIGatewayProxyRequest) (*ResponseJson, error
 	}
 
 	return &r, nil
+}
+
+func putDataDB(response *ResponseJson, request events.APIGatewayProxyRequest) {
+	fmt.Println("😄 1")
+	todayForecasts := response.Forecasts[1]
+
+	// 新しい構造体にデータを詰め替える
+	forecastData := &ForecastData{
+		Reagion: Reagion{
+			Id:   cityId,
+			Name: response.Location.City,
+			Pref: response.Location.Prefecture,
+		},
+	}
+	fmt.Println("😄 2")
+	fmt.Println(forecastData)
+
+	temperature := Temperature{
+		Id:   cityId,
+		Date: todayForecasts.Date,
+	}
+	// MinTemperatureがnilでない場合、Celsiusをセット
+	if todayForecasts.MinTemperature != nil && todayForecasts.MinTemperature.Celsius != nil {
+		temperature.Min = *todayForecasts.MinTemperature.Celsius
+	}
+	// MaxTemperatureがnilでない場合、Celsiusをセット
+	if todayForecasts.MaxTemperature != nil && todayForecasts.MaxTemperature.Celsius != nil {
+		temperature.Max = *todayForecasts.MaxTemperature.Celsius
+	}
+	forecastData.Temperatures = append(forecastData.Temperatures, temperature)
+
+	fmt.Println("😄 4")
+	fmt.Println(temperature)
+	// Details
+	detail := Detail{
+		Id:      cityId,
+		Date:    todayForecasts.Date,
+		Weather: todayForecasts.Weather,
+		Wind:    todayForecasts.Wind,
+		Wave:    todayForecasts.Wave,
+		Telop:   todayForecasts.Telop,
+	}
+	forecastData.Details = append(forecastData.Details, detail)
+
+	fmt.Println("😄 5")
+	fmt.Println(detail)
+	// Chances
+	chance := ChanceOfRain{
+		Id:     cityId,
+		Date:   todayForecasts.Date,
+		T00_06: todayForecasts.ChanceOfRain.T00_06,
+		T06_12: todayForecasts.ChanceOfRain.T06_12,
+		T12_18: todayForecasts.ChanceOfRain.T12_18,
+		T18_24: todayForecasts.ChanceOfRain.T18_24,
+	}
+	forecastData.Chances = append(forecastData.Chances, chance)
+
+	fmt.Println("😄 6")
+	fmt.Println(chance)
+	// レスポンス表示
+
 }
