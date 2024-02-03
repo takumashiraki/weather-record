@@ -3,13 +3,16 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	_ "github.com/lib/pq"
 )
 
 // --- API Responseを受け取るための構造体 ---
@@ -251,4 +254,26 @@ func putDataDB(response *ResponseJson, request events.APIGatewayProxyRequest) {
 	fmt.Println(chance)
 	// レスポンス表示
 
+	fmt.Println("😄 7")
+	fmt.Println("posgreに接続する")
+
+	var dbName string = "rds-for-postgeresql-weather-record"
+	var dbPassword string = "weather_password_2024"
+	var dbUser string = "weather_reporter"
+	var dbHost string = "rds-for-postgeresql-weather-record.c1owwq2mqjfe.ap-northeast-1.rds.amazonaws.com"
+	var dbPort int = 5432
+
+	// PostgreSQL 接続文字列
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=require", dbHost, dbPort, dbUser, dbPassword, dbName)
+
+	// PostgreSQL に接続
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer db.Close()
+
+	fmt.Println("😄 8")
+	fmt.Println("posgreに接続後")
 }

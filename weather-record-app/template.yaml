@@ -1,8 +1,8 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   weather-record-app
-  
+
   Sample SAM Template for weather-record-app
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
@@ -31,6 +31,27 @@ Resources:
       DockerTag: go1.x-v1
       DockerContext: ./hello-world
       Dockerfile: Dockerfile
+
+service: go-connect-rds # RDSのポリシーを書く
+frameworkVersion: ">=1.28.0 <2.0.0"
+RDS:
+Type: AWS::RDS::DBInstance
+Properties:
+  DBSecurityGroups:
+    - Ref: sg-09791e16d999204f6
+    - Ref: sg-0def8066c03202b8b
+    # db-security-group
+    # - Ref: sg-09d682888f99c5802
+    # rds-rdsproxy-1
+    # - Ref: sg-041223094944a1620
+  AllocatedStorage: "5"
+  DBInstanceClass: db.t3.micro
+  Engine: PostgreSQL
+  MasterUsername: weather-record
+  ManageMasterUserPassword: true
+  MasterUserSecret:
+    KmsKeyId: !Ref KMSKey
+DeletionPolicy: Snapshot
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
